@@ -40,7 +40,7 @@ export default function ScannerPage() {
   }, []);
 
   // START CAMERA
-  const startCamera = (s) => {
+  const startCamera = (s: string) => {
     if (!scannerRef.current) return;
 
     const qrConfig = {
@@ -112,7 +112,7 @@ export default function ScannerPage() {
   };
 
   // HANDLE SCAN
-  const handleScanData = async (id, targetSheet) => {
+  const handleScanData = async (id: string, targetSheet: string) => {
     await stopCamera(); 
 
     setInfo({
@@ -161,7 +161,7 @@ export default function ScannerPage() {
   };
 
   // UPLOAD FILE
-  const handleFileUpload = async (e) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !scannerRef.current) return;
 
