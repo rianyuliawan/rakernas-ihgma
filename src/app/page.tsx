@@ -53,6 +53,10 @@ export default function ScannerPage() {
         qrConfig,
         async (decodedText) => {
           handleScanData(decodedText, s);
+        },
+        (errorMessage) => {
+          // Tambahkan baris ini agar jadi 4 argumen
+          // Bisa dikosongkan karena ini hanya error log per frame
         }
       )
       .then(() => {
