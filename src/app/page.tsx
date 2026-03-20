@@ -22,7 +22,7 @@ export default function ScannerPage() {
     icon: "✅"
   });
 
-  const scannerRef = useRef(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
