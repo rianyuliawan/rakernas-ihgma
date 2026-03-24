@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { RiImageAddFill, RiCheckFill, RiCloseFill, RiAlertFill } from "react-icons/ri";
+import { RiImageAddFill, RiCheckFill, RiCloseFill, RiAlertFill, RiLoader4Line } from "react-icons/ri";
 import Image from "next/image";
 
 export default function ScannerPage() {
@@ -43,7 +43,7 @@ export default function ScannerPage() {
         const backCamera = devices.find(d => d.label.toLowerCase().includes('back') && !d.label.toLowerCase().includes('wide')) || devices[0];
         await scannerRef.current.start(
           backCamera.id,
-          { fps: 60, qrbox: { width: 220, height: 220 } },
+          { fps: 60, qrbox: { width: 220, height: 220 }, disableFlip: true },
           (decodedText) => handleScanData(decodedText, s),
           () => { }
         );
@@ -60,7 +60,7 @@ export default function ScannerPage() {
 
   const handleScanData = async (id: string, targetSheet: string) => {
     await stopCamera(); 
-    setInfo({ status: "MEMPROSES...", nama: "Mohon Tunggu", color: "bg-yellow-600" });
+    setInfo({ status: "MEMPROSES...", nama: "Mohon Tunggu", color: "bg-amber-500" });
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL!, {
         method: "POST", headers: { "Content-Type": "text/plain" },
@@ -87,26 +87,25 @@ export default function ScannerPage() {
   return (
     <div className="fixed inset-0 bg-black flex flex-col font-sans overflow-hidden">
       
-      {/* 1. HEADER (LOGO & JUDUL) */}
-      <div className="flex-shrink-0 bg-white border-b border-slate-200 py-4 flex flex-col items-center shadow-md">
+      {/* 1. HEADER */}
+      <div className="flex-shrink-0 bg-white border-b border-slate-200 py-4 flex flex-col items-center shadow-md z-30">
          <div className="flex items-center gap-3 mb-1">
             <div className="relative w-10 h-10">
                <Image src="/asset/image.png" alt="Logo" fill className="object-contain" priority />
             </div>
             <div className="flex flex-col">
-               <h2 className="text-blue-900 font-black text-xs leading-none">RAKERNAS V IHGMA</h2>
-               <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">LOMBOK - NTB 2026</p>
+               <h2 className="text-blue-900 font-black text-xs leading-none uppercase">Rakernas V IHGMA</h2>
+               <p className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Lombok - NTB 2026</p>
             </div>
          </div>
          <div className="w-full h-px bg-slate-100 my-2"></div>
          <p className="text-[11px] font-black text-blue-900 tracking-[0.3em] uppercase">SCAN {targetName}</p>
       </div>
 
-      {/* 2. AREA KAMERA (FULL WIDTH) */}
-      <div className="relative flex-1 bg-black overflow-hidden">
+      {/* 2. AREA KAMERA */}
+      <div className="relative flex-1 bg-black overflow-hidden z-10">
          <div id="reader" className="w-full h-full"></div>
          
-         {/* Overlay Box */}
          <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-10">
             <div className="w-full max-w-[240px] aspect-square border-2 border-blue-400 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] relative">
                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-blue-500 rounded-tl-lg"></div>
@@ -116,12 +115,12 @@ export default function ScannerPage() {
             </div>
          </div>
 
-         {/* Tombol Upload (Melayang) */}
          <div className="absolute bottom-6 left-1/2 -translate-x-1/2">
             <label className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer active:scale-90 transition-all">
                <input type="file" hidden onChange={(e) => {
                   const file = e.target.files?.[0];
                   if(file) {
+                    setInfo({ status: "MENYIAPKAN...", nama: "Membaca File", color: "bg-blue-600" });
                     stopCamera().then(() => {
                       scannerRef.current?.scanFile(file, true).then(id => handleScanData(id, new URLSearchParams(window.location.search).get("s") || "registrasi_ulang"));
                     });
@@ -132,10 +131,13 @@ export default function ScannerPage() {
          </div>
       </div>
 
-      {/* 3. FOOTER STATUS */}
-      <div className={`flex-shrink-0 p-6 ${info.color} text-white text-center shadow-[0_-4px_20px_rgba(0,0,0,0.3)]`}>
+      {/* 3. FOOTER STATUS (WITH LOADING ANIMATION) */}
+      <div className={`flex-shrink-0 p-6 ${info.color} text-white text-center shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-30`}>
          <p className="font-black text-lg uppercase truncate mb-1 tracking-tight">{info.nama}</p>
-         <div className="inline-block px-4 py-1 bg-white/20 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
+         <div className="inline-flex items-center gap-2 px-4 py-1 bg-white/20 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
+            {(info.status.includes("PROSES") || info.status.includes("CARI") || info.status.includes("SIAPKAN")) && (
+               <RiLoader4Line className="animate-spin text-sm" />
+            )}
             {info.status}
          </div>
       </div>
@@ -143,7 +145,7 @@ export default function ScannerPage() {
       {/* 4. POPUP RESULT */}
       {showPopup && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[10000] p-6">
-          <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-sm text-center shadow-2xl border-t-[10px] border-emerald-500">
+          <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-sm text-center shadow-2xl border-t-[10px] border-current" style={{borderColor: 'currentColor'}}>
             <div className={`text-7xl flex justify-center mb-6 ${popupTheme.text}`}>{popupTheme.icon}</div>
             <h2 className={`text-2xl font-black mb-2 uppercase ${popupTheme.text}`}>{info.status}</h2>
             <p className="text-slate-500 font-bold mb-10 uppercase text-sm leading-tight px-4">{info.nama}</p>
