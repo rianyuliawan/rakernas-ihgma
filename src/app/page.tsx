@@ -53,7 +53,8 @@ export default function ScannerPage() {
           !device.label.toLowerCase().includes('ultra')
         ) || devices[devices.length - 1];
 
-        const qrConfig = { fps: 20, qrbox: { width: 220, height: 220 } };
+        // Ukuran box diperkecil sedikit agar tidak makan tempat
+        const qrConfig = { fps: 20, qrbox: { width: 200, height: 200 } };
 
         await scannerRef.current.start(
           backCamera.id,
@@ -153,47 +154,54 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-slate-100 flex items-center justify-center font-sans">
-      <div className="w-full max-w-md h-[100dvh] md:h-[95vh] bg-white md:rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 overflow-hidden bg-black flex items-center justify-center font-sans">
+      
+      {/* BACKGROUND VIDEO (Full Screen) */}
+      <div id="reader" className="absolute inset-0 z-0"></div>
+
+      {/* OVERLAY UI */}
+      <div className="relative z-10 w-full h-full flex flex-col justify-between pointer-events-none">
         
-        {/* HEADER */}
-        <div className="flex-shrink-0 flex flex-col items-center py-4 text-center">
-          <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] mb-1 uppercase">Sistem Scanner</p>
-          <h2 className="text-xl font-black text-blue-900 uppercase tracking-tight px-4">
-            SCAN {targetName}
-          </h2>
-          <div className="h-1 w-10 bg-orange-500 rounded-full mt-1"></div>
+        {/* HEADER (Z-INDEX TINGGI & BG GLASS) */}
+        <div className="w-full pt-10 pb-6 px-4 bg-gradient-to-b from-white/90 to-transparent pointer-events-auto">
+          <div className="flex flex-col items-center text-center">
+            <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1 uppercase">SISTEM SCANNER</p>
+            <h2 className="text-xl font-black text-blue-900 uppercase tracking-tight">
+              SCAN {targetName}
+            </h2>
+            <div className="h-1 w-12 bg-orange-500 rounded-full mt-2"></div>
+          </div>
         </div>
 
-        {/* CAMERA AREA - DIBUAT FLEX-1 AGAR MENYESUAIKAN SISA LAYAR */}
-        <div className="relative flex-1 overflow-hidden bg-black">
-          <div id="reader" className="w-full h-full"></div>
+        {/* TENGAH: SCAN BOX */}
+        <div className="flex items-center justify-center p-10">
+          <div className="w-full max-w-[240px] aspect-square border-2 border-blue-400 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
+        </div>
+
+        {/* FOOTER: STATUS & UPLOAD */}
+        <div className="w-full pb-8 pt-10 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent pointer-events-auto flex flex-col items-center">
           
-          {/* Overlay Box */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 p-10">
-            <div className="w-full max-w-[250px] aspect-square border-2 border-blue-400 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]"></div>
-          </div>
+          {/* Tombol Upload */}
+          <label className="mb-6 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer active:scale-90 transition-all">
+             <input type="file" hidden onChange={handleFileUpload} />
+             <RiImageAddFill className="text-3xl text-slate-800" />
+          </label>
 
-          {/* Upload Button */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-            <label className="w-14 h-14 bg-white/90 rounded-2xl flex items-center justify-center shadow-xl cursor-pointer active:scale-90 transition-all">
-              <input type="file" hidden onChange={handleFileUpload} />
-              <RiImageAddFill className="text-3xl text-slate-800" />
-            </label>
+          <div className="text-center px-6">
+            <p className="font-black text-xl text-white uppercase tracking-wide mb-1 drop-shadow-md">
+              {info.nama}
+            </p>
+            <div className={`inline-block px-4 py-1.5 ${info.color} rounded-full text-[10px] font-bold tracking-widest uppercase border border-white/20`}>
+              {info.status}
+            </div>
           </div>
         </div>
 
-        {/* STATUS FOOTER - TINGGI FIX AGAR TIDAK KEPOTONG */}
-        <div className={`flex-shrink-0 p-5 ${info.color} text-white text-center transition-colors duration-500`}>
-          <p className="font-black text-lg uppercase truncate leading-tight mb-1">{info.nama}</p>
-          <div className="inline-block px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold tracking-widest uppercase">
-            {info.status}
-          </div>
-        </div>
       </div>
 
+      {/* POPUP (Tetap sama) */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 pointer-events-auto">
           <div className={`bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl border-t-[12px] border-current ${popupTheme.text}`}>
             <div className="text-6xl mb-4">{popupTheme.icon}</div>
             <h2 className="text-2xl font-black mb-2 uppercase">{info.status}</h2>
@@ -214,7 +222,10 @@ export default function ScannerPage() {
           height: 100% !important;
           object-fit: cover !important;
         }
-        #reader { border: none !important; }
+        #reader { 
+          border: none !important; 
+          background: black !important;
+        }
       `}</style>
     </div>
   );
