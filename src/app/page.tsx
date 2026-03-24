@@ -71,7 +71,7 @@ export default function ScannerPage() {
         setInfo({ status: "BERHASIL", nama: result.nama, color: "bg-emerald-600" });
         setPopupTheme({ text: "text-emerald-600", bg: "bg-emerald-600", icon: <RiCheckFill /> });
       } else if (result.status === "already_exists") {
-        setInfo({ status: "DUPLIKAT", nama: result.nama + " (Sudah Absen)", color: "bg-orange-500" });
+        setInfo({ status: "DUPLIKAT", nama: result.nama + " (Sudah Presensi)", color: "bg-orange-500" });
         setPopupTheme({ text: "text-orange-500", bg: "bg-orange-500", icon: <RiAlertFill /> });
       } else {
         setInfo({ status: "TIDAK VALID", nama: "ID Tidak Terdaftar", color: "bg-red-600" });
