@@ -43,7 +43,7 @@ export default function ScannerPage() {
         const backCamera = devices.find(d => d.label.toLowerCase().includes('back') && !d.label.toLowerCase().includes('wide')) || devices[0];
         await scannerRef.current.start(
           backCamera.id,
-          { fps: 20, qrbox: { width: 220, height: 220 } },
+          { fps: 60, qrbox: { width: 220, height: 220 } },
           (decodedText) => handleScanData(decodedText, s),
           () => { }
         );
