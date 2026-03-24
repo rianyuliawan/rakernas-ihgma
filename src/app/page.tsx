@@ -169,39 +169,36 @@ export default function ScannerPage() {
       {/* CAMERA */}
       <div id="reader" className="absolute inset-0 z-0"></div>
 
-      {/* UI */}
-      <div className="relative z-10 h-full flex flex-col">
+      {/* HEADER */}
+      <div className="absolute top-0 left-0 w-full px-4 pb-6 pt-[calc(env(safe-area-inset-top)+16px)] bg-gradient-to-b from-white/90 to-transparent z-20 text-center">
+        <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">
+          SISTEM SCANNER
+        </p>
+        <h2 className="text-xl font-black text-blue-900 uppercase">
+          SCAN {targetName}
+        </h2>
+        <div className="h-1 w-12 bg-orange-500 rounded-full mt-2 mx-auto"></div>
+      </div>
 
-        {/* HEADER (SAFE AREA) */}
-        <div className="px-4 pb-6 pt-[calc(env(safe-area-inset-top)+16px)] bg-gradient-to-b from-white/90 to-transparent text-center">
-          <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">
-            SISTEM SCANNER
-          </p>
-          <h2 className="text-xl font-black text-blue-900 uppercase">
-            SCAN {targetName}
-          </h2>
-          <div className="h-1 w-12 bg-orange-500 rounded-full mt-2 mx-auto"></div>
-        </div>
+      {/* CENTER */}
+      <div className="absolute inset-0 flex items-center justify-center z-10 px-6">
+        <div className="w-full max-w-[240px] aspect-square border-2 border-blue-400 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
+      </div>
 
-        {/* CENTER */}
-        <div className="flex-1 flex items-center justify-center px-6">
-          <div className="w-full max-w-[240px] aspect-square border-2 border-blue-400 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
-        </div>
+      {/* FOOTER */}
+      <div className="absolute bottom-0 left-0 w-full pt-10 pb-[calc(env(safe-area-inset-bottom)+20px)] bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent z-20 flex flex-col items-center">
 
-        {/* FOOTER (SAFE AREA) */}
-        <div className="pt-10 pb-[calc(env(safe-area-inset-bottom)+20px)] bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex flex-col items-center">
+        <label className="mb-6 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer active:scale-90">
+          <input type="file" hidden onChange={handleFileUpload} />
+          <RiImageAddFill className="text-3xl text-slate-800" />
+        </label>
 
-          <label className="mb-6 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer active:scale-90 transition-all">
-            <input type="file" hidden onChange={handleFileUpload} />
-            <RiImageAddFill className="text-3xl text-slate-800" />
-          </label>
+        <p className="font-black text-xl text-white uppercase">
+          {info.nama}
+        </p>
 
-          <p className="font-black text-xl text-white uppercase">
-            {info.nama}
-          </p>
-          <div className={`mt-1 px-4 py-1.5 ${info.color} rounded-full text-xs font-bold`}>
-            {info.status}
-          </div>
+        <div className={`mt-1 px-4 py-1.5 ${info.color} rounded-full text-xs font-bold`}>
+          {info.status}
         </div>
       </div>
 
@@ -222,6 +219,7 @@ export default function ScannerPage() {
         </div>
       )}
 
+      {/* VIDEO FIX */}
       <style jsx global>{`
         #reader video {
           width: 100% !important;
