@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { RiImageAddFill, RiFlashlightLine } from "react-icons/ri";
+import { RiImageAddFill } from "react-icons/ri";
 
 export default function ScannerPage() {
   const [info, setInfo] = useState({
@@ -10,8 +10,7 @@ export default function ScannerPage() {
     color: "bg-slate-800",
   });
 
-  const [targetName, setTargetName] = useState("REGISTRASI");
-  const [flashOn, setFlashOn] = useState(false);
+  const [targetName, setTargetName] = useState("KEHADIRAN");
   const [showPopup, setShowPopup] = useState(false);
   const [popupTheme, setPopupTheme] = useState({
     text: "text-green-600",
@@ -24,7 +23,14 @@ export default function ScannerPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const s = params.get("s") || "registrasi_ulang";
-    setTargetName(s.replace("_", " ").toUpperCase());
+
+    // LOGIKA MAPPING JUDUL
+    const getFriendlyName = (slug: string) => {
+      if (slug === "registrasi_ulang") return "KEHADIRAN";
+      return slug.replace("_", " ").toUpperCase();
+    };
+
+    setTargetName(getFriendlyName(s));
 
     const html5QrCode = new Html5Qrcode("reader");
     scannerRef.current = html5QrCode;
@@ -36,25 +42,23 @@ export default function ScannerPage() {
     };
   }, []);
 
-  // START CAMERA (DENGAN LOGIKA PEMILIHAN LENSA 1X)
+  // START CAMERA (LENSA 1X)
   const startCamera = async (s: string) => {
     if (!scannerRef.current) return;
 
     try {
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
-        // Cari kamera belakang yang labelnya tidak mengandung 'wide' atau 'ultra'
-        // Biasanya lensa utama ada di urutan pertama atau labelnya paling sederhana
         const backCamera = devices.find(device => 
           device.label.toLowerCase().includes('back') && 
           !device.label.toLowerCase().includes('wide') &&
           !device.label.toLowerCase().includes('ultra')
-        ) || devices[devices.length - 1]; // Fallback ke kamera terakhir jika tidak ketemu
+        ) || devices[devices.length - 1];
 
         const qrConfig = { fps: 20, qrbox: { width: 250, height: 250 } };
 
         await scannerRef.current.start(
-          backCamera.id, // Gunakan ID Kamera spesifik hasil filter
+          backCamera.id,
           qrConfig,
           (decodedText) => handleScanData(decodedText, s),
           () => { /* ignore frame errors */ }
@@ -82,28 +86,7 @@ export default function ScannerPage() {
     }
   };
 
-  // FLASHLIGHT (LOGIKA DIPERKUAT)
-  const toggleFlash = async () => {
-    try {
-      const videoElement = document.querySelector("#reader video") as HTMLVideoElement;
-      if (!videoElement || !videoElement.srcObject) return;
-
-      const stream = videoElement.srcObject as MediaStream;
-      const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities() as any;
-
-      if (capabilities && capabilities.torch) {
-        await track.applyConstraints({ advanced: [{ torch: !flashOn }] } as any);
-        setFlashOn(!flashOn);
-      } else {
-        alert("Senter tidak diizinkan oleh sistem/browser");
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // HANDLE SCAN (DENGAN FEEDBACK CEPAT)
+  // HANDLE SCAN
   const handleScanData = async (id: string, targetSheet: string) => {
     await stopCamera(); 
 
@@ -150,7 +133,7 @@ export default function ScannerPage() {
     startCamera(s); 
   };
 
-  // UPLOAD FILE (OPTIMASI KECEPATAN)
+  // UPLOAD FILE
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !scannerRef.current) return;
@@ -161,8 +144,6 @@ export default function ScannerPage() {
     try {
       setInfo({ status: "MENYIAPKAN...", nama: "Mohon Tunggu", color: "bg-blue-600" });
       await stopCamera();
-      
-      // Beri jeda 300ms agar RAM bersih sebelum scan file berat
       await new Promise(r => setTimeout(r, 300));
 
       setInfo({ status: "MEMBACA QR...", nama: "Sedang Scan File", color: "bg-blue-600" });
@@ -181,11 +162,13 @@ export default function ScannerPage() {
     <div className="fixed inset-0 overflow-hidden bg-slate-100 flex items-center justify-center font-sans">
       <div className="w-full max-w-md h-full max-h-[95vh] bg-white rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden border-b-[10px] border-slate-200 m-2">
         
+        {/* HEADER DENGAN JUDUL DINAMIS */}
         <div className="flex-shrink-0 flex flex-col items-center py-6 text-center">
-          <h2 className="text-lg font-black text-blue-900 uppercase tracking-tight">
-            SCANNER {targetName}
+          <p className="text-[10px] font-bold text-slate-400 tracking-[0.2em] mb-1">SISTEM SCANNER</p>
+          <h2 className="text-xl font-black text-blue-900 uppercase tracking-tight">
+            SCAN {targetName}
           </h2>
-          <div className="h-1 w-10 bg-orange-500 rounded-full mt-1"></div>
+          <div className="h-1.5 w-12 bg-orange-500 rounded-full mt-2"></div>
         </div>
 
         <div className="relative flex-1 overflow-hidden bg-black">
@@ -194,22 +177,12 @@ export default function ScannerPage() {
             <div className="w-60 h-60 border-2 border-blue-400 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
           </div>
 
-          <div className="absolute bottom-6 left-6 z-20">
-            <label className="w-14 h-14 bg-white/95 rounded-2xl flex items-center justify-center shadow-xl cursor-pointer active:scale-90 transition-all">
+          {/* Tombol Upload (Flashlight dihapus) */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20">
+            <label className="w-16 h-16 bg-white/95 rounded-2xl flex items-center justify-center shadow-xl cursor-pointer active:scale-90 transition-all">
               <input type="file" hidden onChange={handleFileUpload} />
-              <RiImageAddFill className="text-3xl text-slate-800" />
+              <RiImageAddFill className="text-4xl text-slate-800" />
             </label>
-          </div>
-
-          <div className="absolute bottom-6 right-6 z-20">
-            <button
-              onClick={toggleFlash}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all active:scale-90 ${
-                flashOn ? "bg-yellow-400 text-black" : "bg-white/95 text-slate-800"
-              }`}
-            >
-              <RiFlashlightLine className="text-3xl" />
-            </button>
           </div>
         </div>
 
