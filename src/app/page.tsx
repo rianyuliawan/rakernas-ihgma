@@ -18,13 +18,13 @@ export default function ScannerPage() {
     icon: "✅"
   });
 
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const s = params.get("s") || "registrasi_ulang";
 
-    const getFriendlyName = (slug: string) => {
+    const getFriendlyName = (slug) => {
       if (slug === "registrasi_ulang") return "KEHADIRAN";
       return slug.replace("_", " ").toUpperCase();
     };
@@ -41,26 +41,23 @@ export default function ScannerPage() {
     };
   }, []);
 
-  const startCamera = async (s: string) => {
+  const startCamera = async (s) => {
     if (!scannerRef.current) return;
 
     try {
       const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length > 0) {
-        const backCamera = devices.find(device => 
-          device.label.toLowerCase().includes('back') && 
-          !device.label.toLowerCase().includes('wide') &&
-          !device.label.toLowerCase().includes('ultra')
-        ) || devices[devices.length - 1];
+        const backCamera =
+          devices.find((d) =>
+            d.label.toLowerCase().includes("back")
+          ) || devices[devices.length - 1];
 
-        // Ukuran box diperkecil sedikit agar tidak makan tempat
         const qrConfig = { fps: 20, qrbox: { width: 200, height: 200 } };
 
         await scannerRef.current.start(
           backCamera.id,
           qrConfig,
-          (decodedText) => handleScanData(decodedText, s),
-          () => { }
+          (decodedText) => handleScanData(decodedText, s)
         );
 
         setInfo({
@@ -69,8 +66,7 @@ export default function ScannerPage() {
           color: "bg-slate-800",
         });
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setInfo({
         status: "ERROR KAMERA",
         nama: "Izinkan Akses Kamera",
@@ -85,8 +81,8 @@ export default function ScannerPage() {
     }
   };
 
-  const handleScanData = async (id: string, targetSheet: string) => {
-    await stopCamera(); 
+  const handleScanData = async (id, targetSheet) => {
+    await stopCamera();
 
     setInfo({
       status: "MEMPROSES...",
@@ -96,7 +92,7 @@ export default function ScannerPage() {
 
     try {
       const response = await fetch(
-        process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL!,
+        process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL,
         {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
@@ -110,15 +106,28 @@ export default function ScannerPage() {
         setInfo({ status: "BERHASIL", nama: result.nama, color: "bg-green-600" });
         setPopupTheme({ text: "text-green-600", bg: "bg-green-600", icon: "✅" });
       } else if (result.status === "already_exists") {
-        setInfo({ status: "DUPLIKAT", nama: result.nama + " (Sudah Absen)", color: "bg-orange-500" });
+        setInfo({
+          status: "DUPLIKAT",
+          nama: result.nama + " (Sudah Absen)",
+          color: "bg-orange-500",
+        });
         setPopupTheme({ text: "text-orange-500", bg: "bg-orange-500", icon: "⚠️" });
       } else {
-        setInfo({ status: "TIDAK VALID", nama: "ID Tidak Terdaftar", color: "bg-red-600" });
+        setInfo({
+          status: "TIDAK VALID",
+          nama: "ID Tidak Terdaftar",
+          color: "bg-red-600",
+        });
         setPopupTheme({ text: "text-red-600", bg: "bg-red-600", icon: "❌" });
       }
-      setShowPopup(true); 
+
+      setShowPopup(true);
     } catch {
-      setInfo({ status: "ERROR", nama: "Koneksi Bermasalah", color: "bg-red-800" });
+      setInfo({
+        status: "ERROR",
+        nama: "Koneksi Bermasalah",
+        color: "bg-red-800",
+      });
       setPopupTheme({ text: "text-red-800", bg: "bg-red-800", icon: "❌" });
       setShowPopup(true);
     }
@@ -128,19 +137,20 @@ export default function ScannerPage() {
     setShowPopup(false);
     const params = new URLSearchParams(window.location.search);
     const s = params.get("s") || "registrasi_ulang";
-    startCamera(s); 
+    startCamera(s);
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !scannerRef.current) return;
+
     const params = new URLSearchParams(window.location.search);
     const s = params.get("s") || "registrasi_ulang";
 
     try {
       setInfo({ status: "MENYIAPKAN...", nama: "Mohon Tunggu", color: "bg-blue-600" });
       await stopCamera();
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       setInfo({ status: "MEMBACA QR...", nama: "Sedang Scan File", color: "bg-blue-600" });
       const decodedText = await scannerRef.current.scanFile(file, false);
       await handleScanData(decodedText, s);
@@ -154,63 +164,59 @@ export default function ScannerPage() {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black flex items-center justify-center font-sans">
-      
-      {/* BACKGROUND VIDEO (Full Screen) */}
+    <div className="fixed inset-0 bg-black font-sans">
+
+      {/* CAMERA */}
       <div id="reader" className="absolute inset-0 z-0"></div>
 
-      {/* OVERLAY UI */}
-      <div className="relative z-10 w-full h-full flex flex-col justify-between pointer-events-none">
-        
-        {/* HEADER (Z-INDEX TINGGI & BG GLASS) */}
-        <div className="w-full pt-10 pb-6 px-4 bg-gradient-to-b from-white/90 to-transparent pointer-events-auto">
-          <div className="flex flex-col items-center text-center">
-            <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] mb-1 uppercase">SISTEM SCANNER</p>
-            <h2 className="text-xl font-black text-blue-900 uppercase tracking-tight">
-              SCAN {targetName}
-            </h2>
-            <div className="h-1 w-12 bg-orange-500 rounded-full mt-2"></div>
-          </div>
+      {/* UI */}
+      <div className="relative z-10 h-full flex flex-col">
+
+        {/* HEADER (SAFE AREA) */}
+        <div className="px-4 pb-6 pt-[calc(env(safe-area-inset-top)+16px)] bg-gradient-to-b from-white/90 to-transparent text-center">
+          <p className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">
+            SISTEM SCANNER
+          </p>
+          <h2 className="text-xl font-black text-blue-900 uppercase">
+            SCAN {targetName}
+          </h2>
+          <div className="h-1 w-12 bg-orange-500 rounded-full mt-2 mx-auto"></div>
         </div>
 
-        {/* TENGAH: SCAN BOX */}
-        <div className="flex items-center justify-center p-10">
+        {/* CENTER */}
+        <div className="flex-1 flex items-center justify-center px-6">
           <div className="w-full max-w-[240px] aspect-square border-2 border-blue-400 rounded-3xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
         </div>
 
-        {/* FOOTER: STATUS & UPLOAD */}
-        <div className="w-full pb-8 pt-10 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent pointer-events-auto flex flex-col items-center">
-          
-          {/* Tombol Upload */}
+        {/* FOOTER (SAFE AREA) */}
+        <div className="pt-10 pb-[calc(env(safe-area-inset-bottom)+20px)] bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent flex flex-col items-center">
+
           <label className="mb-6 w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-2xl cursor-pointer active:scale-90 transition-all">
-             <input type="file" hidden onChange={handleFileUpload} />
-             <RiImageAddFill className="text-3xl text-slate-800" />
+            <input type="file" hidden onChange={handleFileUpload} />
+            <RiImageAddFill className="text-3xl text-slate-800" />
           </label>
 
-          <div className="text-center px-6">
-            <p className="font-black text-xl text-white uppercase tracking-wide mb-1 drop-shadow-md">
-              {info.nama}
-            </p>
-            <div className={`inline-block px-4 py-1.5 ${info.color} rounded-full text-[10px] font-bold tracking-widest uppercase border border-white/20`}>
-              {info.status}
-            </div>
+          <p className="font-black text-xl text-white uppercase">
+            {info.nama}
+          </p>
+          <div className={`mt-1 px-4 py-1.5 ${info.color} rounded-full text-xs font-bold`}>
+            {info.status}
           </div>
         </div>
-
       </div>
 
-      {/* POPUP (Tetap sama) */}
+      {/* POPUP */}
       {showPopup && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 pointer-events-auto">
-          <div className={`bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl border-t-[12px] border-current ${popupTheme.text}`}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className={`bg-white rounded-3xl p-8 w-full max-w-sm text-center border-t-8 ${popupTheme.text}`}>
             <div className="text-6xl mb-4">{popupTheme.icon}</div>
-            <h2 className="text-2xl font-black mb-2 uppercase">{info.status}</h2>
-            <p className="text-slate-600 font-bold mb-8 leading-tight uppercase">{info.nama}</p>
+            <h2 className="text-xl font-black">{info.status}</h2>
+            <p className="mb-6">{info.nama}</p>
             <button
               onClick={handleContinueScan}
-              className={`w-full py-4 rounded-2xl font-black text-white shadow-lg active:scale-95 transition-all ${popupTheme.bg}`}
+              className={`w-full py-3 rounded-xl text-white ${popupTheme.bg}`}
             >
-              OK, LANJUT SCAN
+              OK
             </button>
           </div>
         </div>
@@ -221,10 +227,6 @@ export default function ScannerPage() {
           width: 100% !important;
           height: 100% !important;
           object-fit: cover !important;
-        }
-        #reader { 
-          border: none !important; 
-          background: black !important;
         }
       `}</style>
     </div>
