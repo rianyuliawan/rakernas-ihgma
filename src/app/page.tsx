@@ -67,11 +67,18 @@ export default function ScannerPage() {
         body: JSON.stringify({ id, targetSheet }),
       });
       const result = await response.json();
+      
       if (result.status === "success") {
         setInfo({ status: "BERHASIL", nama: result.nama, color: "bg-emerald-600" });
         setPopupTheme({ text: "text-emerald-600", bg: "bg-emerald-600", icon: <RiCheckFill /> });
       } else if (result.status === "already_exists") {
-        setInfo({ status: "DUPLIKAT", nama: result.nama + " (Sudah Presensi)", color: "bg-orange-500" });
+        // Menambahkan info waktu jika ada data waktu dari server
+        const detailWaktu = result.waktu ? `\nPada: ${result.waktu}` : "";
+        setInfo({ 
+          status: "DUPLIKAT", 
+          nama: `${result.nama} (Sudah Presensi)${detailWaktu}`, 
+          color: "bg-orange-500" 
+        });
         setPopupTheme({ text: "text-orange-500", bg: "bg-orange-500", icon: <RiAlertFill /> });
       } else {
         setInfo({ status: "TIDAK VALID", nama: "ID Tidak Terdaftar", color: "bg-red-600" });
@@ -131,9 +138,9 @@ export default function ScannerPage() {
          </div>
       </div>
 
-      {/* 3. FOOTER STATUS (WITH LOADING ANIMATION) */}
+      {/* 3. FOOTER STATUS */}
       <div className={`flex-shrink-0 p-6 ${info.color} text-white text-center shadow-[0_-4px_20px_rgba(0,0,0,0.3)] z-30`}>
-         <p className="font-black text-lg uppercase truncate mb-1 tracking-tight">{info.nama}</p>
+         <p className="font-black text-lg uppercase truncate mb-1 tracking-tight">{info.nama.split('\n')[0]}</p>
          <div className="inline-flex items-center gap-2 px-4 py-1 bg-white/20 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
             {(info.status.includes("PROSES") || info.status.includes("CARI") || info.status.includes("SIAPKAN")) && (
                <RiLoader4Line className="animate-spin text-sm" />
@@ -148,7 +155,9 @@ export default function ScannerPage() {
           <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-sm text-center shadow-2xl border-t-[10px] border-current" style={{borderColor: 'currentColor'}}>
             <div className={`text-7xl flex justify-center mb-6 ${popupTheme.text}`}>{popupTheme.icon}</div>
             <h2 className={`text-2xl font-black mb-2 uppercase ${popupTheme.text}`}>{info.status}</h2>
-            <p className="text-slate-500 font-bold mb-10 uppercase text-sm leading-tight px-4">{info.nama}</p>
+            <div className="text-slate-500 font-bold mb-10 uppercase text-sm leading-tight px-4 whitespace-pre-line">
+              {info.nama}
+            </div>
             <button onClick={() => { setShowPopup(false); startCamera(new URLSearchParams(window.location.search).get("s") || "registrasi_ulang"); }} 
                     className={`w-full py-4 rounded-2xl font-black text-white ${popupTheme.bg} shadow-lg active:scale-95 transition-all uppercase tracking-widest`}>
               OK, LANJUT SCAN
