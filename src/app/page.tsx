@@ -24,7 +24,7 @@ export default function ScannerPage() {
     const s = params.get("s") || "registrasi_ulang";
     const getFriendlyName = (slug: string) => {
       if (slug === "registrasi_ulang") return "KEHADIRAN";
-      return slug.replace("_", " ").toUpperCase();
+      return slug.replace(/_/g, " ").toUpperCase();
     };
     setTargetName(getFriendlyName(s));
 
